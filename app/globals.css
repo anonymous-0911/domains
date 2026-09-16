@@ -1,10 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@500;700;900&family=Inter:wght@300;400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Michroma&family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@500;700;900&family=Inter:wght@300;400;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
+  --font-michroma: 'Michroma', sans-serif;
   --font-cinzel: 'Cinzel', serif;
   --font-cinzel-dec: 'Cinzel Decorative', serif;
   --font-inter: 'Inter', sans-serif;
@@ -166,8 +167,8 @@ html, body {
 
 .problem-card__realm-badge {
   display: inline-block;
-  font-family: var(--font-cinzel), serif;
-  font-weight: 900;
+  font-family: var(--font-michroma), sans-serif;
+  font-weight: 700;
   font-size: 0.65rem;
   letter-spacing: 0.35em;
   text-transform: uppercase;
@@ -180,8 +181,8 @@ html, body {
 }
 
 .problem-card__code {
-  font-family: var(--font-cinzel), serif;
-  font-weight: 900;
+  font-family: var(--font-michroma), sans-serif;
+  font-weight: 700;
   font-size: clamp(2rem, 5vw, 3.2rem);
   letter-spacing: 0.2em;
   background: linear-gradient(180deg, #5a3a08 0%, #8e5c10 35%, #b8820e 65%, #6a4408 100%);
@@ -194,7 +195,7 @@ html, body {
 }
 
 .problem-card__name {
-  font-family: var(--font-cinzel), serif;
+  font-family: var(--font-michroma), sans-serif;
   font-weight: 700;
   font-size: clamp(0.8rem, 1.8vw, 1.05rem);
   letter-spacing: 0.15em;
@@ -236,10 +237,10 @@ html, body {
 }
 
 .header-title {
-  font-family: var(--font-cinzel), serif;
-  font-size: clamp(2.0rem, 6.5vw, 5.5rem);
-  font-weight: 900;
-  letter-spacing: 0.3em;
+  font-family: var(--font-michroma), sans-serif;
+  font-size: clamp(1.8rem, 5.5vw, 4.5rem);
+  font-weight: 700;
+  letter-spacing: 0.25em;
   text-transform: uppercase;
   background: linear-gradient(180deg, #ffffff 0%, #ffe79a 25%, #e7b648 55%, #9e6410 100%);
   -webkit-background-clip: text;
@@ -250,21 +251,27 @@ html, body {
 }
 
 .header-subtitle {
-  font-size: clamp(0.6rem, 1.8vw, 0.9rem);
-  letter-spacing: 0.35em;
+  font-size: clamp(0.6rem, 1.6vw, 0.85rem);
+  letter-spacing: 0.3em;
   text-transform: uppercase;
   color: #e2c070;
   opacity: 0.85;
   margin-top: 0.4rem;
-  font-family: var(--font-inter), sans-serif;
-  font-weight: 500;
-  transition: all 0.3s ease;
+  font-family: var(--font-michroma), sans-serif;
+  font-weight: 400;
+  transition: opacity 0.4s ease, transform 0.4s ease;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 90vw;
   margin-left: auto;
   margin-right: auto;
+}
+
+.header-subtitle.hidden {
+  opacity: 0 !important;
+  transform: translateY(-8px);
+  pointer-events: none;
 }
 
 /* Responsive adjustments for Mobile Viewports */

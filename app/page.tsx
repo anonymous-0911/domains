@@ -94,7 +94,7 @@ export default function Home() {
         height: '100vh',
         overflow: 'hidden',
         background: '#020408',
-        fontFamily: "'Cinzel', serif",
+        fontFamily: "'Michroma', sans-serif",
       }}
     >
       {/* 3D WebGL Scene */}
@@ -110,7 +110,7 @@ export default function Home() {
         <h1 className="header-title">
           DOMAINS
         </h1>
-        <p className="header-subtitle">
+        <p className={`header-subtitle ${selectedDomain ? 'hidden' : ''}`}>
           {hovered ? `${DOMAIN_INFO[hovered]?.name} — ${DOMAIN_INFO[hovered]?.subtitle}` : 'SELECT A REALM TO ENTER'}
         </p>
       </div>

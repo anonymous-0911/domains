@@ -23,7 +23,7 @@ export const DOMAIN_ASSETS: Record<'ds' | 'ml' | 'nlp' | 'cv', DomainItem> = {
     base: '/assets/gates/ds/gate-base.webp',
     glow: '/assets/gates/ds/gate-glow.webp',
     interior: '/assets/gates/ds/gate-interior.webp',
-    position: [-4.6, 0.15, -0.4],
+    position: [-5.25, 0.15, -0.4],
     rotation: [0, 0.08, 0],
   },
   ml: {
@@ -35,7 +35,7 @@ export const DOMAIN_ASSETS: Record<'ds' | 'ml' | 'nlp' | 'cv', DomainItem> = {
     base: '/assets/gates/ml/gate-base.webp',
     glow: '/assets/gates/ml/gate-glow.webp',
     interior: '/assets/gates/ml/gate-interior.webp',
-    position: [-1.55, -0.15, 0.1],
+    position: [-1.75, -0.15, 0.1],
     rotation: [0, 0.03, 0],
   },
   nlp: {
@@ -47,7 +47,7 @@ export const DOMAIN_ASSETS: Record<'ds' | 'ml' | 'nlp' | 'cv', DomainItem> = {
     base: '/assets/gates/nlp/gate-base.webp',
     glow: '/assets/gates/nlp/gate-glow.webp',
     interior: '/assets/gates/nlp/gate-interior.webp',
-    position: [1.55, -0.15, 0.1],
+    position: [1.75, -0.15, 0.1],
     rotation: [0, -0.03, 0],
   },
   cv: {
@@ -59,7 +59,7 @@ export const DOMAIN_ASSETS: Record<'ds' | 'ml' | 'nlp' | 'cv', DomainItem> = {
     base: '/assets/gates/cv/gate-base.webp',
     glow: '/assets/gates/cv/gate-glow.webp',
     interior: '/assets/gates/cv/gate-interior.webp',
-    position: [4.6, 0.15, -0.4],
+    position: [5.25, 0.15, -0.4],
     rotation: [0, -0.08, 0],
   },
 };

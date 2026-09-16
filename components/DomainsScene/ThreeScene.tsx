@@ -5,17 +5,17 @@ import * as THREE from 'three';
 
 /* ─────────────────────────── Domain Definitions ────────────────────────── */
 const DOMAINS_LAYOUT_DESKTOP: Record<string, { xPos: number; yPos: number; rotY: number }> = {
-  ds:  { xPos: -5.1, yPos: 0.0, rotY: 0.0 },
-  ml:  { xPos: -1.7, yPos: 0.0, rotY: 0.0 },
-  nlp: { xPos: 1.7,  yPos: 0.0, rotY: 0.0 },
-  cv:  { xPos: 5.1,  yPos: 0.0, rotY: 0.0 },
+  ds:  { xPos: -5.25, yPos: 0.0, rotY: 0.0 },
+  ml:  { xPos: -1.75, yPos: 0.0, rotY: 0.0 },
+  nlp: { xPos: 1.75,  yPos: 0.0, rotY: 0.0 },
+  cv:  { xPos: 5.25,  yPos: 0.0, rotY: 0.0 },
 };
 
 const DOMAINS_LAYOUT_MOBILE: Record<string, { xPos: number; yPos: number; rotY: number }> = {
-  ds:  { xPos: -1.70, yPos: 2.15, rotY: 0.0 },
-  ml:  { xPos: 1.70,  yPos: 2.15, rotY: 0.0 },
-  nlp: { xPos: -1.70, yPos: -2.15, rotY: 0.0 },
-  cv:  { xPos: 1.70,  yPos: -2.15, rotY: 0.0 },
+  ds:  { xPos: -1.45, yPos: 1.95, rotY: 0.0 },
+  ml:  { xPos: 1.45,  yPos: 1.95, rotY: 0.0 },
+  nlp: { xPos: -1.45, yPos: -1.95, rotY: 0.0 },
+  cv:  { xPos: 1.45,  yPos: -1.95, rotY: 0.0 },
 };
 
 const DOMAINS = [
@@ -27,7 +27,7 @@ const DOMAINS = [
     interior: '/assets/gates/ds/gate-interior.webp',
     base: '/assets/gates/ds/gate-base.webp',
     glow: '/assets/gates/ds/gate-glow.webp',
-    xPos: -5.1,
+    xPos: -5.25,
     yPos: 0.0,
     rotY: 0.0,
   },
@@ -39,7 +39,7 @@ const DOMAINS = [
     interior: '/assets/gates/ml/gate-interior.webp',
     base: '/assets/gates/ml/gate-base.webp',
     glow: '/assets/gates/ml/gate-glow.webp',
-    xPos: -1.7,
+    xPos: -1.75,
     yPos: 0.0,
     rotY: 0.0,
   },
@@ -51,7 +51,7 @@ const DOMAINS = [
     interior: '/assets/gates/nlp/gate-interior.webp',
     base: '/assets/gates/nlp/gate-base.webp',
     glow: '/assets/gates/nlp/gate-glow.webp',
-    xPos: 1.7,
+    xPos: 1.75,
     yPos: 0.0,
     rotY: 0.0,
   },
@@ -63,7 +63,7 @@ const DOMAINS = [
     interior: '/assets/gates/cv/gate-interior.webp',
     base: '/assets/gates/cv/gate-base.webp',
     glow: '/assets/gates/cv/gate-glow.webp',
-    xPos: 5.1,
+    xPos: 5.25,
     yPos: 0.0,
     rotY: 0.0,
   },
@@ -78,8 +78,8 @@ function createGateTextTexture(code: string, name: string) {
 
   ctx.clearRect(0, 0, 512, 256);
 
-  // Main Domain Code (DS, ML, NLP, CV)
-  ctx.font = '900 86px "Cinzel", "Trajan Pro", "Times New Roman", serif';
+  // Main Domain Code (DS, ML, NLP, CV) with Michroma Font
+  ctx.font = '700 74px "Michroma", sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
 
@@ -96,7 +96,7 @@ function createGateTextTexture(code: string, name: string) {
   ctx.fillText(code, 256, 85);
 
   // Domain Full Name Subtitle
-  ctx.font = '700 24px "Inter", "Segoe UI", sans-serif';
+  ctx.font = '400 18px "Michroma", sans-serif';
   ctx.fillStyle = '#fcdb88';
   ctx.shadowColor = 'rgba(255, 170, 40, 0.7)';
   ctx.shadowBlur = 12;
@@ -322,6 +322,7 @@ function createInteriorShader(interiorTexture: THREE.Texture) {
       uTexture: { value: interiorTexture },
       uAspectPlane: { value: (2.8 * 0.58) / (4.3 * 0.72) }, // ~0.524
       uAspectTex: { value: 1920.0 / 1080.0 },               // 1.7778
+      uZoomProgress: { value: 0.0 },
     },
     vertexShader: `
       varying vec2 vUv;
@@ -334,6 +335,7 @@ function createInteriorShader(interiorTexture: THREE.Texture) {
       uniform sampler2D uTexture;
       uniform float uAspectPlane;
       uniform float uAspectTex;
+      uniform float uZoomProgress;
       varying vec2 vUv;
 
       void main() {
@@ -370,7 +372,10 @@ function createInteriorShader(interiorTexture: THREE.Texture) {
           mask *= smoothstep(1.0, 0.75, domeRadius);
         }
 
-        gl_FragColor = vec4(col.rgb, col.a * mask);
+        // Dissolve arch mask smoothly into unmasked full view when entering arena
+        float finalMask = mix(mask, 1.0, uZoomProgress);
+
+        gl_FragColor = vec4(col.rgb, col.a * finalMask);
       }
     `,
     transparent: true,
@@ -379,15 +384,18 @@ function createInteriorShader(interiorTexture: THREE.Texture) {
 }
 
 /* ─────────────────────────── Gate Data & Factory ───────────────────────── */
+/* ─────────────────────────── Gate Data & Factory ───────────────────────── */
 interface GateData {
   group: THREE.Group;
   interiorMesh: THREE.Mesh;
   baseMesh: THREE.Mesh;
   glowMesh: THREE.Mesh;
   textMesh: THREE.Mesh;
+  interiorMat: THREE.ShaderMaterial;
   glowMat: THREE.MeshBasicMaterial;
   baseMat: THREE.MeshBasicMaterial;
   textMat: THREE.MeshBasicMaterial;
+  defaultBaseTex: THREE.Texture;
   pointLight: THREE.PointLight;
   hoverProgress: number;
   domain: (typeof DOMAINS)[number];
@@ -401,9 +409,9 @@ function createGate(
   group.position.set(domain.xPos, domain.yPos, 0);
   group.rotation.y = domain.rotY;
 
-  // Gate Frame Dimensions
-  const W = 2.8;
-  const H = 4.3;
+  // Gate Frame Dimensions (Enlarged)
+  const W = 3.4;
+  const H = 5.2;
 
   /* 1. Interior Portal World View (Layer 1 - Back) */
   const interiorTex = loader.load(domain.interior);
@@ -413,13 +421,13 @@ function createGate(
   const interiorMat = createInteriorShader(interiorTex);
 
   // Interior plane sized strictly to fit inside stone arch pillars
-  const intW = W * 0.58; // 1.62
-  const intH = H * 0.72; // 3.09
+  const intW = W * 0.58; // 1.972
+  const intH = H * 0.72; // 3.744
   const interiorMesh = new THREE.Mesh(
     new THREE.PlaneGeometry(intW, intH),
     interiorMat
   );
-  interiorMesh.position.set(0, -0.28, -0.04);
+  interiorMesh.position.set(0, -0.34, -0.04);
   group.add(interiorMesh);
 
   /* 2. Gate Glow Effect (Layer 2 - Placed BEHIND Gate Base at z = -0.02) */
@@ -440,12 +448,12 @@ function createGate(
   group.add(glowMesh);
 
   /* 3. Gate Base Archway Structure (Layer 3 - Middle at z = 0.0, exact image colors) */
-  const baseTex = loader.load(domain.base);
-  baseTex.colorSpace = THREE.SRGBColorSpace;
-  baseTex.generateMipmaps = false;
-  baseTex.minFilter = THREE.LinearFilter;
+  const defaultBaseTex = loader.load(domain.base);
+  defaultBaseTex.colorSpace = THREE.SRGBColorSpace;
+  defaultBaseTex.generateMipmaps = false;
+  defaultBaseTex.minFilter = THREE.LinearFilter;
   const baseMat = new THREE.MeshBasicMaterial({
-    map: baseTex,
+    map: defaultBaseTex,
     transparent: true,
     alphaTest: 0.02,
   });
@@ -461,13 +469,13 @@ function createGate(
     depthWrite: false,
     toneMapped: false,
   });
-  const textMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.0, 1.0), textMat);
-  textMesh.position.set(0, -1.35, 0.05);
+  const textMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.2), textMat);
+  textMesh.position.set(0, -1.61, 0.05);
   group.add(textMesh);
 
   /* 5. Golden Point Light at Base of Gate */
   const pointLight = new THREE.PointLight('#ffaa22', 0.6, 8, 2);
-  pointLight.position.set(0, -2.0, 0.8);
+  pointLight.position.set(0, -2.4, 0.8);
   group.add(pointLight);
 
   return {
@@ -476,9 +484,11 @@ function createGate(
     baseMesh,
     glowMesh,
     textMesh,
+    interiorMat,
     glowMat,
     baseMat,
     textMat,
+    defaultBaseTex,
     pointLight,
     hoverProgress: 0,
     domain,
@@ -630,6 +640,17 @@ export default function ThreeScene({ onHoverChange, onDomainSelect, requestZoomO
     );
     scene.add(embers);
 
+    /* ── Shared Mobile Gate Base Textures ── */
+    const dsBaseTex = texLoader.load('/assets/gates/ds/gate-base.webp');
+    dsBaseTex.colorSpace = THREE.SRGBColorSpace;
+    dsBaseTex.generateMipmaps = false;
+    dsBaseTex.minFilter = THREE.LinearFilter;
+
+    const cvBaseTex = texLoader.load('/assets/gates/cv/gate-base.webp');
+    cvBaseTex.colorSpace = THREE.SRGBColorSpace;
+    cvBaseTex.generateMipmaps = false;
+    cvBaseTex.minFilter = THREE.LinearFilter;
+
     /* ── Raycaster & Hitboxes ── */
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
@@ -637,7 +658,7 @@ export default function ThreeScene({ onHoverChange, onDomainSelect, requestZoomO
     const cameraPos = new THREE.Vector3(0, 0.4, 11.5);
 
     const hitboxes: Array<{ mesh: THREE.Mesh; gate: GateData }> = gates.map((g) => {
-      const hbGeo = new THREE.PlaneGeometry(2.8, 4.3);
+      const hbGeo = new THREE.PlaneGeometry(3.4, 5.2);
       const hbMat = new THREE.MeshBasicMaterial({ visible: false, side: THREE.FrontSide });
       const hbMesh = new THREE.Mesh(hbGeo, hbMat);
       hbMesh.position.copy(g.group.position);
@@ -657,20 +678,38 @@ export default function ThreeScene({ onHoverChange, onDomainSelect, requestZoomO
           g.group.position.set(config.xPos, config.yPos, 0);
           g.group.rotation.y = config.rotY;
         }
+
+        // On mobile viewports:
+        // ML and CV use CV's gate-base texture
+        // DS and NLP use DS's gate-base texture
+        let targetTex = g.defaultBaseTex;
+        if (isMobile) {
+          if (g.domain.id === 'ml' || g.domain.id === 'cv') {
+            targetTex = cvBaseTex;
+          } else {
+            targetTex = dsBaseTex;
+          }
+        }
+
+        if (g.baseMat.map !== targetTex) {
+          g.baseMat.map = targetTex;
+          g.baseMat.needsUpdate = true;
+        }
       });
 
       hitboxes.forEach((h) => {
         h.mesh.position.copy(h.gate.group.position);
         h.mesh.rotation.copy(h.gate.group.rotation);
+        h.mesh.scale.copy(h.gate.group.scale);
       });
 
       if (isMobile) {
-        camera.fov = 24;
+        camera.fov = 26;
         waterMesh.position.set(0, -4.8, 0);
         fog1.position.set(0, -4.0, -3);
         fog2.position.set(0, -2.5, -5);
         if (zoomPhaseRef.current === 'idle') {
-          cameraPos.set(0, 0.0, 30.0);
+          cameraPos.set(0, 0.0, 31.0);
           cameraTarget.set(0, 0.0, 0);
         }
       } else {
@@ -762,13 +801,13 @@ export default function ThreeScene({ onHoverChange, onDomainSelect, requestZoomO
           hitGate.group.getWorldPosition(gateWorldPos);
           const isMobile = mount.clientWidth < 768;
           zoomCameraToRef.current.set(
-            gateWorldPos.x * 0.85,
-            gateWorldPos.y + (isMobile ? 0.1 : 0.35),
+            isMobile ? gateWorldPos.x * 0.85 : gateWorldPos.x,
+            isMobile ? gateWorldPos.y + 0.1 : gateWorldPos.y,
             isMobile ? 7.2 : 6.0
           );
           zoomLookAtToRef.current.set(
-            gateWorldPos.x * 0.85,
-            gateWorldPos.y + (isMobile ? 0.1 : 0.35),
+            isMobile ? gateWorldPos.x * 0.85 : gateWorldPos.x,
+            isMobile ? gateWorldPos.y + 0.1 : gateWorldPos.y,
             0
           );
 
@@ -866,7 +905,16 @@ export default function ThreeScene({ onHoverChange, onDomainSelect, requestZoomO
       (fogMat2.uniforms.uTime as { value: number }).value = elapsed * 0.7;
       (waterMat.uniforms.uTime as { value: number }).value = elapsed;
 
-      // 4. Update Gate States
+      // 4. Update Gate States & Entrance Arena Animations
+      let currentZoomFactor = 0;
+      if (phase === 'zooming-in') {
+        currentZoomFactor = easeInOutCubic(zoomProgressRef.current);
+      } else if (phase === 'open') {
+        currentZoomFactor = 1.0;
+      } else if (phase === 'zooming-out') {
+        currentZoomFactor = 1.0 - easeInOutCubic(zoomProgressRef.current);
+      }
+
       gates.forEach((g) => {
         const isHovered = hoveredRef.current === g.domain.id;
         g.hoverProgress = THREE.MathUtils.lerp(
@@ -876,16 +924,43 @@ export default function ThreeScene({ onHoverChange, onDomainSelect, requestZoomO
         );
         const p = g.hoverProgress;
 
-        // Gate scale bump on hover (desktop only to prevent mobile touch grid shift)
+        // Gate scale: enlarged on desktop, compact on mobile responsiveness
         const isMobile = mount.clientWidth < 768;
-        const s = isMobile ? 1.0 : (1.0 + p * 0.06);
-        g.group.scale.set(s, s, s);
+        const baseScale = isMobile ? 0.82 : 1.12;
+        const s = isMobile ? baseScale : (baseScale + p * 0.06);
 
-        // Gate Glow attached behind gate (opacity 0 when idle -> 1.0 on hover)
-        g.glowMat.opacity = p * 1.0;
+        const isSelectedGate = g.domain.id === zoomGateIdRef.current;
+        const gateZf = isSelectedGate ? currentZoomFactor : 0;
+        const otherZf = (!isSelectedGate && currentZoomFactor > 0) ? currentZoomFactor : 0;
+
+        if (isSelectedGate) {
+          // Entering the arena: door frame, label, and glow fade away completely
+          g.baseMat.opacity = Math.max(0, 1.0 - gateZf * 1.5);
+          g.textMat.opacity = Math.max(0, 1.0 - gateZf * 1.5);
+          g.glowMat.opacity = p * (1.0 - gateZf);
+
+          // Portal shader unmasks into full-screen viewport
+          (g.interiorMat.uniforms.uZoomProgress as { value: number }).value = gateZf;
+
+          // On desktop view, expand interiorMesh to fit background size; keep compact on mobile
+          const intScale = isMobile ? (1.0 + gateZf * 1.2) : (1.0 + gateZf * 4.2);
+          g.interiorMesh.scale.set(intScale, intScale, 1.0);
+          g.interiorMesh.position.set(0, -0.34 * (1.0 - gateZf), 0.04 * gateZf);
+
+          g.group.scale.set(s, s, s);
+        } else {
+          // Non-selected gates fade out smoothly when entering a realm
+          g.baseMat.opacity = Math.max(0, 1.0 - otherZf * 1.5);
+          g.textMat.opacity = Math.max(0, 1.0 - otherZf * 1.5);
+          g.glowMat.opacity = 0;
+          (g.interiorMat.uniforms.uZoomProgress as { value: number }).value = 0;
+          g.interiorMesh.scale.set(1.0, 1.0, 1.0);
+          g.interiorMesh.position.set(0, -0.34, -0.04);
+          g.group.scale.set(s, s, s);
+        }
 
         // Base light intensity
-        g.pointLight.intensity = 0.6 + p * 3.8;
+        g.pointLight.intensity = (0.6 + p * 3.8) * (1.0 - gateZf - otherZf);
         g.pointLight.color.setStyle(isHovered ? '#ffd455' : '#ffaa22');
       });
 
