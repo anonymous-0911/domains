@@ -5,10 +5,10 @@ import * as THREE from 'three';
 
 /* ─────────────────────────── Domain Definitions ────────────────────────── */
 const DOMAINS_LAYOUT_DESKTOP: Record<string, { xPos: number; yPos: number; rotY: number }> = {
-  ds:  { xPos: -5.25, yPos: 0.0, rotY: 0.0 },
-  ml:  { xPos: -1.75, yPos: 0.0, rotY: 0.0 },
-  nlp: { xPos: 1.75,  yPos: 0.0, rotY: 0.0 },
-  cv:  { xPos: 5.25,  yPos: 0.0, rotY: 0.0 },
+  ds:  { xPos: -5.70, yPos: 0.0, rotY: 0.0 },
+  ml:  { xPos: -1.90, yPos: 0.0, rotY: 0.0 },
+  nlp: { xPos: 1.90,  yPos: 0.0, rotY: 0.0 },
+  cv:  { xPos: 5.70,  yPos: 0.0, rotY: 0.0 },
 };
 
 const DOMAINS_LAYOUT_MOBILE: Record<string, { xPos: number; yPos: number; rotY: number }> = {
@@ -27,7 +27,7 @@ const DOMAINS = [
     interior: '/assets/gates/ds/gate-interior.webp',
     base: '/assets/gates/ds/gate-base.webp',
     glow: '/assets/gates/ds/gate-glow.webp',
-    xPos: -5.25,
+    xPos: -5.70,
     yPos: 0.0,
     rotY: 0.0,
   },
@@ -39,7 +39,7 @@ const DOMAINS = [
     interior: '/assets/gates/ml/gate-interior.webp',
     base: '/assets/gates/ml/gate-base.webp',
     glow: '/assets/gates/ml/gate-glow.webp',
-    xPos: -1.75,
+    xPos: -1.90,
     yPos: 0.0,
     rotY: 0.0,
   },
@@ -51,7 +51,7 @@ const DOMAINS = [
     interior: '/assets/gates/nlp/gate-interior.webp',
     base: '/assets/gates/nlp/gate-base.webp',
     glow: '/assets/gates/nlp/gate-glow.webp',
-    xPos: 1.75,
+    xPos: 1.90,
     yPos: 0.0,
     rotY: 0.0,
   },
@@ -63,7 +63,7 @@ const DOMAINS = [
     interior: '/assets/gates/cv/gate-interior.webp',
     base: '/assets/gates/cv/gate-base.webp',
     glow: '/assets/gates/cv/gate-glow.webp',
-    xPos: 5.25,
+    xPos: 5.70,
     yPos: 0.0,
     rotY: 0.0,
   },
