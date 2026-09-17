@@ -238,7 +238,7 @@ html, body {
 
 .header-title {
   font-family: var(--font-michroma), sans-serif;
-  font-size: clamp(2.8rem, 8vw, 6.2rem);
+  font-size: clamp(1.8rem, 4.2vw, 3.4rem);
   font-weight: 700;
   letter-spacing: 0.25em;
   text-transform: uppercase;
