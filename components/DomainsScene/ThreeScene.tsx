@@ -12,10 +12,10 @@ const DOMAINS_LAYOUT_DESKTOP: Record<string, { xPos: number; yPos: number; rotY:
 };
 
 const DOMAINS_LAYOUT_MOBILE: Record<string, { xPos: number; yPos: number; rotY: number }> = {
-  ds:  { xPos: -1.45, yPos: 1.95, rotY: 0.0 },
-  ml:  { xPos: 1.45,  yPos: 1.95, rotY: 0.0 },
-  nlp: { xPos: -1.45, yPos: -1.95, rotY: 0.0 },
-  cv:  { xPos: 1.45,  yPos: -1.95, rotY: 0.0 },
+  ds:  { xPos: -1.75, yPos: 3.45, rotY: 0.0 },
+  ml:  { xPos: 1.75,  yPos: 3.45, rotY: 0.0 },
+  nlp: { xPos: -1.75, yPos: -2.55, rotY: 0.0 },
+  cv:  { xPos: 1.75,  yPos: -2.55, rotY: 0.0 },
 };
 
 const DOMAINS = [
@@ -320,7 +320,7 @@ function createInteriorShader(interiorTexture: THREE.Texture) {
   return new THREE.ShaderMaterial({
     uniforms: {
       uTexture: { value: interiorTexture },
-      uAspectPlane: { value: (2.8 * 0.58) / (4.3 * 0.72) }, // ~0.524
+      uAspectPlane: { value: (3.4 * 0.58) / (5.2 * 0.72) }, // ~0.526
       uAspectTex: { value: 1920.0 / 1080.0 },               // 1.7778
       uZoomProgress: { value: 0.0 },
     },
@@ -383,7 +383,6 @@ function createInteriorShader(interiorTexture: THREE.Texture) {
   });
 }
 
-/* ─────────────────────────── Gate Data & Factory ───────────────────────── */
 /* ─────────────────────────── Gate Data & Factory ───────────────────────── */
 interface GateData {
   group: THREE.Group;
@@ -455,7 +454,7 @@ function createGate(
   const baseMat = new THREE.MeshBasicMaterial({
     map: defaultBaseTex,
     transparent: true,
-    alphaTest: 0.02,
+    alphaTest: 0.0,
   });
   const baseMesh = new THREE.Mesh(new THREE.PlaneGeometry(W, H), baseMat);
   baseMesh.position.z = 0.0;
@@ -704,12 +703,12 @@ export default function ThreeScene({ onHoverChange, onDomainSelect, requestZoomO
       });
 
       if (isMobile) {
-        camera.fov = 26;
+        camera.fov = 30;
         waterMesh.position.set(0, -4.8, 0);
         fog1.position.set(0, -4.0, -3);
         fog2.position.set(0, -2.5, -5);
         if (zoomPhaseRef.current === 'idle') {
-          cameraPos.set(0, 0.0, 31.0);
+          cameraPos.set(0, 0.0, 36.5);
           cameraTarget.set(0, 0.0, 0);
         }
       } else {
@@ -796,19 +795,19 @@ export default function ThreeScene({ onHoverChange, onDomainSelect, requestZoomO
           zoomCameraFromRef.current.copy(camera.position);
           zoomLookAtFromRef.current.copy(cameraTarget);
 
-          // Compute zoom target: move camera toward the gate
+          // Compute zoom target: move camera forward directly into the clicked gate
           const gateWorldPos = new THREE.Vector3();
           hitGate.group.getWorldPosition(gateWorldPos);
           const isMobile = mount.clientWidth < 768;
           zoomCameraToRef.current.set(
             isMobile ? gateWorldPos.x * 0.85 : gateWorldPos.x,
-            isMobile ? gateWorldPos.y + 0.1 : gateWorldPos.y,
-            isMobile ? 7.2 : 6.0
+            isMobile ? gateWorldPos.y + 0.1 : gateWorldPos.y - 0.15,
+            isMobile ? 4.5 : 0.65
           );
           zoomLookAtToRef.current.set(
             isMobile ? gateWorldPos.x * 0.85 : gateWorldPos.x,
-            isMobile ? gateWorldPos.y + 0.1 : gateWorldPos.y,
-            0
+            isMobile ? gateWorldPos.y + 0.1 : gateWorldPos.y - 0.15,
+            -5.0
           );
 
           zoomGateIdRef.current = hitGate.domain.id;
@@ -837,8 +836,8 @@ export default function ThreeScene({ onHoverChange, onDomainSelect, requestZoomO
       const phase = zoomPhaseRef.current;
 
       if (phase === 'zooming-in' || phase === 'zooming-out') {
-        const ZOOM_IN_DURATION = 0.8;  // seconds
-        const ZOOM_OUT_DURATION = 0.65; // seconds
+        const ZOOM_IN_DURATION = 1.25; // Continuous smooth entrance duration
+        const ZOOM_OUT_DURATION = 0.75; // seconds
         const duration = phase === 'zooming-in' ? ZOOM_IN_DURATION : ZOOM_OUT_DURATION;
 
         zoomProgressRef.current = Math.min(zoomProgressRef.current + delta / duration, 1.0);
@@ -860,7 +859,7 @@ export default function ThreeScene({ onHoverChange, onDomainSelect, requestZoomO
         if (zoomProgressRef.current >= 1.0) {
           if (phase === 'zooming-in') {
             zoomPhaseRef.current = 'open';
-            // Notify parent that zoom-in is complete
+            // Notify parent that zoom-in is complete -> PS card pops out
             onDomainSelectRef.current?.(zoomGateIdRef.current);
           } else {
             zoomPhaseRef.current = 'idle';
@@ -924,9 +923,9 @@ export default function ThreeScene({ onHoverChange, onDomainSelect, requestZoomO
         );
         const p = g.hoverProgress;
 
-        // Gate scale: enlarged on desktop, compact on mobile responsiveness
+        // Gate scale: enlarged on desktop (1.12), enlarged on mobile responsiveness (0.96)
         const isMobile = mount.clientWidth < 768;
-        const baseScale = isMobile ? 0.82 : 1.12;
+        const baseScale = isMobile ? 0.96 : 1.12;
         const s = isMobile ? baseScale : (baseScale + p * 0.06);
 
         const isSelectedGate = g.domain.id === zoomGateIdRef.current;
@@ -934,18 +933,18 @@ export default function ThreeScene({ onHoverChange, onDomainSelect, requestZoomO
         const otherZf = (!isSelectedGate && currentZoomFactor > 0) ? currentZoomFactor : 0;
 
         if (isSelectedGate) {
-          // Entering the arena: door frame, label, and glow fade away completely
-          g.baseMat.opacity = Math.max(0, 1.0 - gateZf * 1.5);
-          g.textMat.opacity = Math.max(0, 1.0 - gateZf * 1.5);
+          // Gate stone borders stay visible as camera moves in, fading only as camera passes through (0.65 -> 1.0)
+          g.baseMat.opacity = gateZf < 0.65 ? 1.0 : Math.max(0, (1.0 - gateZf) / 0.35);
+          g.textMat.opacity = Math.max(0, (0.6 - gateZf) / 0.5);
           g.glowMat.opacity = p * (1.0 - gateZf);
 
           // Portal shader unmasks into full-screen viewport
           (g.interiorMat.uniforms.uZoomProgress as { value: number }).value = gateZf;
 
-          // On desktop view, expand interiorMesh to fit background size; keep compact on mobile
-          const intScale = isMobile ? (1.0 + gateZf * 1.2) : (1.0 + gateZf * 4.2);
+          // Gate interior PNG slowly enhances/scales up behind the gate to cover background size
+          const intScale = isMobile ? (1.0 + gateZf * 1.4) : (1.0 + gateZf * 2.6);
           g.interiorMesh.scale.set(intScale, intScale, 1.0);
-          g.interiorMesh.position.set(0, -0.34 * (1.0 - gateZf), 0.04 * gateZf);
+          g.interiorMesh.position.set(0, -0.34 * (1.0 - gateZf), -0.04);
 
           g.group.scale.set(s, s, s);
         } else {
