@@ -339,18 +339,19 @@ function createInteriorShader(interiorTexture: THREE.Texture) {
       varying vec2 vUv;
 
       void main() {
-        // Cover UV mapping (preserves 16:9 ratio without stretching)
+        // Transition from arch cover crop to 100% full whole image as it replaces the background
         vec2 uv = vUv;
         float planeAspect = uAspectPlane;
         float texAspect = uAspectTex;
 
-        if (planeAspect < texAspect) {
-          float scale = planeAspect / texAspect;
-          uv.x = (uv.x - 0.5) * scale + 0.5;
-        } else {
-          float scale = texAspect / planeAspect;
-          uv.y = (uv.y - 0.5) * scale + 0.5;
-        }
+        float startScaleX = planeAspect < texAspect ? (planeAspect / texAspect) : 1.0;
+        float startScaleY = planeAspect < texAspect ? 1.0 : (texAspect / planeAspect);
+
+        float curScaleX = mix(startScaleX, 1.0, uZoomProgress);
+        float curScaleY = mix(startScaleY, 1.0, uZoomProgress);
+
+        uv.x = (uv.x - 0.5) * curScaleX + 0.5;
+        uv.y = (uv.y - 0.5) * curScaleY + 0.5;
 
         vec4 col = texture2D(uTexture, uv);
 
@@ -840,7 +841,7 @@ export default function ThreeScene({ onHoverChange, onGateClick, onDomainSelect,
       const phase = zoomPhaseRef.current;
 
       if (phase === 'zooming-in' || phase === 'zooming-out') {
-        const ZOOM_IN_DURATION = 1.25; // Continuous smooth entrance duration
+        const ZOOM_IN_DURATION = 1.35; // Continuous smooth entrance duration
         const ZOOM_OUT_DURATION = 0.75; // seconds
         const duration = phase === 'zooming-in' ? ZOOM_IN_DURATION : ZOOM_OUT_DURATION;
 
@@ -937,18 +938,21 @@ export default function ThreeScene({ onHoverChange, onGateClick, onDomainSelect,
         const otherZf = (!isSelectedGate && currentZoomFactor > 0) ? currentZoomFactor : 0;
 
         if (isSelectedGate) {
-          // Gate stone borders stay visible as camera moves in, fading only as camera passes through (0.65 -> 1.0)
-          g.baseMat.opacity = gateZf < 0.65 ? 1.0 : Math.max(0, (1.0 - gateZf) / 0.35);
-          g.textMat.opacity = Math.max(0, (0.6 - gateZf) / 0.5);
+          // Stage 1 (gateZf < 0.45): Camera view goes in while gate interior PNG stays framed inside stone archway (scale = 1.0)
+          // Stage 2 (gateZf >= 0.45): As camera enters archway, interior image expands to replace background size & stone arch fades
+          const p2 = Math.max(0, (gateZf - 0.45) / 0.55); // 0.0 to 1.0
+
+          g.baseMat.opacity = 1.0 - p2;
+          g.textMat.opacity = Math.max(0, 1.0 - gateZf * 2.0);
           g.glowMat.opacity = p * (1.0 - gateZf);
 
-          // Portal shader unmasks into full-screen viewport
-          (g.interiorMat.uniforms.uZoomProgress as { value: number }).value = gateZf;
+          // Portal shader unmasks into full-screen viewport in stage 2
+          (g.interiorMat.uniforms.uZoomProgress as { value: number }).value = p2;
 
-          // Gate interior PNG slowly enhances/scales up behind the gate to cover background size
-          const intScale = isMobile ? (1.0 + gateZf * 1.4) : (1.0 + gateZf * 2.6);
+          // Gate interior PNG stays framed at scale 1.0 during approach, then expands to fill background size in stage 2
+          const intScale = isMobile ? (1.0 + p2 * 1.4) : (1.0 + p2 * 2.6);
           g.interiorMesh.scale.set(intScale, intScale, 1.0);
-          g.interiorMesh.position.set(0, -0.34 * (1.0 - gateZf), -0.04);
+          g.interiorMesh.position.set(0, -0.34 * (1.0 - p2), -0.04);
 
           g.group.scale.set(s, s, s);
         } else {
