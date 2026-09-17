@@ -502,12 +502,13 @@ function easeInOutCubic(t: number): number {
 /* ─────────────────────────── Main Component ────────────────────────────── */
 interface ThreeSceneProps {
   onHoverChange?: (id: string | null) => void;
+  onGateClick?: (id: string) => void;
   onDomainSelect?: (id: string | null) => void;
   requestZoomOut?: boolean;
   onZoomOutComplete?: () => void;
 }
 
-export default function ThreeScene({ onHoverChange, onDomainSelect, requestZoomOut, onZoomOutComplete }: ThreeSceneProps) {
+export default function ThreeScene({ onHoverChange, onGateClick, onDomainSelect, requestZoomOut, onZoomOutComplete }: ThreeSceneProps) {
   const mountRef = useRef<HTMLDivElement>(null);
   const hoveredRef = useRef<string | null>(null);
 
@@ -519,11 +520,13 @@ export default function ThreeScene({ onHoverChange, onDomainSelect, requestZoomO
   const zoomCameraToRef = useRef(new THREE.Vector3());
   const zoomLookAtFromRef = useRef(new THREE.Vector3(0, 0.1, 0));
   const zoomLookAtToRef = useRef(new THREE.Vector3());
+  const onGateClickRef = useRef(onGateClick);
   const onDomainSelectRef = useRef(onDomainSelect);
   const onZoomOutCompleteRef = useRef(onZoomOutComplete);
   const requestZoomOutRef = useRef(requestZoomOut);
 
   // Keep refs in sync with latest props
+  useEffect(() => { onGateClickRef.current = onGateClick; }, [onGateClick]);
   useEffect(() => { onDomainSelectRef.current = onDomainSelect; }, [onDomainSelect]);
   useEffect(() => { onZoomOutCompleteRef.current = onZoomOutComplete; }, [onZoomOutComplete]);
 
@@ -813,6 +816,7 @@ export default function ThreeScene({ onHoverChange, onDomainSelect, requestZoomO
           zoomGateIdRef.current = hitGate.domain.id;
           zoomProgressRef.current = 0;
           zoomPhaseRef.current = 'zooming-in';
+          onGateClickRef.current?.(hitGate.domain.id);
 
           // Clear hover state
           hoveredRef.current = null;

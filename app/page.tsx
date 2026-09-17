@@ -37,12 +37,17 @@ const DOMAIN_INFO: Record<string, { code: string; name: string; subtitle: string
 export default function Home() {
   const [hovered, setHovered] = useState<string | null>(null);
   const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
+  const [isGateClicked, setIsGateClicked] = useState(false);
   const [requestZoomOut, setRequestZoomOut] = useState(false);
   const [cardVisible, setCardVisible] = useState(false);
   const [cardExiting, setCardExiting] = useState(false);
 
   const handleHover = useCallback((id: string | null) => {
     setHovered(id);
+  }, []);
+
+  const handleGateClick = useCallback(() => {
+    setIsGateClicked(true);
   }, []);
 
   // Called by ThreeScene when zoom-in completes (id) or zoom-out completes (null)
@@ -53,6 +58,7 @@ export default function Home() {
       requestAnimationFrame(() => setCardVisible(true));
     } else {
       setSelectedDomain(null);
+      setIsGateClicked(false);
       setCardVisible(false);
       setCardExiting(false);
     }
@@ -61,6 +67,7 @@ export default function Home() {
   // Called by ThreeScene when zoom-out animation finishes
   const handleZoomOutComplete = useCallback(() => {
     setRequestZoomOut(false);
+    setIsGateClicked(false);
   }, []);
 
   // Trigger close: start card exit animation, then tell ThreeScene to zoom out
@@ -100,6 +107,7 @@ export default function Home() {
       {/* 3D WebGL Scene */}
       <ThreeScene
         onHoverChange={handleHover}
+        onGateClick={handleGateClick}
         onDomainSelect={handleDomainSelect}
         requestZoomOut={requestZoomOut}
         onZoomOutComplete={handleZoomOutComplete}
@@ -110,7 +118,7 @@ export default function Home() {
         <h1 className="header-title">
           DOMAINS
         </h1>
-        <p className={`header-subtitle ${selectedDomain ? 'hidden' : ''}`}>
+        <p className={`header-subtitle ${selectedDomain || isGateClicked ? 'hidden' : ''}`}>
           {hovered ? `${DOMAIN_INFO[hovered]?.name} — ${DOMAIN_INFO[hovered]?.subtitle}` : 'SELECT A REALM TO ENTER'}
         </p>
       </div>
